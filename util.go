@@ -1,9 +1,46 @@
-package recorder
+package testparrot
 
 import (
 	"fmt"
 	"reflect"
 )
+
+func ValToPtr(val interface{}) interface{} {
+	switch v := val.(type) {
+	case bool:
+		return &v
+	case int:
+		return &v
+	case int8:
+		return &v
+	case int16:
+		return &v
+	case int32:
+		return &v
+	case int64:
+		return &v
+	case uint:
+		return &v
+	case uint8:
+		return &v
+	case uint16:
+		return &v
+	case uint32:
+		return &v
+	case uint64:
+		return &v
+	case float32:
+		return &v
+	case float64:
+		return &v
+	case complex64:
+		return &v
+	case complex128:
+		return &v
+	default:
+		return &v
+	}
+}
 
 func getFieldName(structPtr interface{}, fieldPtr interface{}) (name string) {
 	val := reflect.ValueOf(structPtr).Elem()

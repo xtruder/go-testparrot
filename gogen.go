@@ -1,22 +1,57 @@
-package generator
+package testparrot
 
 import (
+	"io"
 	"reflect"
 
 	. "github.com/dave/jennifer/jen"
 )
 
-type generator struct {
+const (
+	pkgPath   = "github.com/xtruder/go-testparrot"
+	pkgName   = "testparrot"
+	valToPtrF = "ValToPtr"
+	loadF     = "Load"
+)
+
+// GoGenerator generates golang code
+type GoGenerator struct {
 	// Name of generate package
 	PkgName string
 }
 
-func typeToCode(g *generator, typ reflect.Type) *Statement {
+func (g *GoGenerator) Generate(registry *Registry, out io.Writer) error {
+	f := NewFilePath(g.PkgName)
+
+	recorders := registry.Recorders()
+
+	statements := []Code{}
+	for _, recorder := range recorders {
+		loadF := Qual(pkgPath, loadF)
+
+		val, err := valToCode(g, reflect.ValueOf(recorder.Records()))
+		if err != nil {
+			return err
+		}
+
+		loadCall := loadF.Call(Lit(recorder.Name()), val)
+		statements = append(statements, loadCall)
+	}
+
+	// Create init method
+	f.Func().Id("init").Params().Block(statements...)
+
+	// Render code
+	return f.Render(out)
+}
+
+func typeToCode(g *GoGenerator, typ reflect.Type) *Statement {
 	switch typ.Kind() {
 	case reflect.Interface:
-		return Id("interface{}")
+		return Interface()
 	default:
-		if typ.PkgPath() == "" || g.PkgName == typ.PkgPath() {
+		pkgPath := typ.PkgPath()
+		if typ.PkgPath() == "" || g.PkgName == pkgPath {
 			return Id(typ.Name())
 		}
 
@@ -24,13 +59,12 @@ func typeToCode(g *generator, typ reflect.Type) *Statement {
 	}
 }
 
-func sliceToCode(g *generator, valValue reflect.Value) (Code, error) {
-	sliceType := valValue.Type().Elem()
-	typeName := sliceType.Name()
+func sliceToCode(g *GoGenerator, sliceVal reflect.Value) (Code, error) {
+	typ := sliceVal.Type().Elem()
 
 	values := []Code{}
-	for i := 0; i < valValue.Len(); i++ {
-		elem := valValue.Index(i)
+	for i := 0; i < sliceVal.Len(); i++ {
+		elem := sliceVal.Index(i)
 
 		code, err := valToCode(g, elem)
 		if err != nil {
@@ -40,16 +74,16 @@ func sliceToCode(g *generator, valValue reflect.Value) (Code, error) {
 		values = append(values, code)
 	}
 
-	return Index().Id(typeName).Values(values...), nil
+	return Index().Add(typeToCode(g, typ)).Values(values...), nil
 }
 
-func mapToCode(g *generator, valValue reflect.Value) (Code, error) {
+func mapToCode(g *GoGenerator, mapVal reflect.Value) (Code, error) {
 	values := Dict{}
 
 	var keyType reflect.Type
 	var valType reflect.Type
-	for _, k := range valValue.MapKeys() {
-		v := valValue.MapIndex(k)
+	for _, k := range mapVal.MapKeys() {
+		v := mapVal.MapIndex(k)
 
 		keyCode, err := valToCode(g, k)
 		if err != nil {
@@ -72,7 +106,7 @@ func mapToCode(g *generator, valValue reflect.Value) (Code, error) {
 	return Map(typeToCode(g, keyType)).Add(typeCode).Values(values), nil
 }
 
-func structToCode(g *generator, structVal reflect.Value) (Code, error) {
+func structToCode(g *GoGenerator, structVal reflect.Value) (Code, error) {
 	structType := structVal.Type()
 
 	if structType.Kind() == reflect.Ptr {
@@ -99,17 +133,17 @@ func structToCode(g *generator, structVal reflect.Value) (Code, error) {
 			return nil, err
 		}
 
-		values[Lit(field.Name)] = code
+		values[Id(field.Name)] = code
 	}
 
 	return typeToCode(g, structType).Values(values), nil
 }
 
-func ptrToCode(g *generator, ptrValue reflect.Value) (Code, error) {
-	valValue := ptrValue.Elem()
-	valType := valValue.Type()
+func ptrToCode(g *GoGenerator, ptrVal reflect.Value) (Code, error) {
+	val := ptrVal.Elem()
+	valType := val.Type()
 
-	valToPtrF := Qual("github.com/xtruder/go-test-recorder/generator", "ValToPtr")
+	valToPtrF := Qual(pkgPath, valToPtrF)
 
 	switch valType.Kind() {
 	// for most type need to get pointer to literal value
@@ -131,18 +165,18 @@ func ptrToCode(g *generator, ptrValue reflect.Value) (Code, error) {
 		reflect.Complex64,
 		reflect.Complex128,
 		reflect.String:
-		return valToPtrF.Call(Lit(valValue.Interface())), nil
+		return valToPtrF.Call(Lit(val.Interface())), nil
 	case reflect.Interface:
-		return ptrToCode(g, valValue)
+		return ptrToCode(g, val)
 	case reflect.Ptr:
-		code, err := ptrToCode(g, valValue)
+		code, err := ptrToCode(g, val)
 		if err != nil {
 			return nil, err
 		}
 
 		return valToPtrF.Call(code), nil
 	default:
-		code, err := valToCode(g, valValue)
+		code, err := valToCode(g, val)
 		if err != nil {
 			return nil, err
 		}
@@ -151,8 +185,8 @@ func ptrToCode(g *generator, ptrValue reflect.Value) (Code, error) {
 	}
 }
 
-func valToCode(g *generator, valValue reflect.Value) (Code, error) {
-	valType := valValue.Type()
+func valToCode(g *GoGenerator, value reflect.Value) (Code, error) {
+	valType := value.Type()
 
 	switch valType.Kind() {
 	// for most values construct literal values
@@ -174,17 +208,17 @@ func valToCode(g *generator, valValue reflect.Value) (Code, error) {
 		reflect.Complex64,
 		reflect.Complex128,
 		reflect.String:
-		return Lit(valValue.Interface()), nil
+		return Lit(value.Interface()), nil
 	case reflect.Array, reflect.Slice:
-		return sliceToCode(g, valValue)
+		return sliceToCode(g, value)
 	case reflect.Interface:
-		return valToCode(g, valValue.Elem())
+		return valToCode(g, value.Elem())
 	case reflect.Map:
-		return mapToCode(g, valValue)
+		return mapToCode(g, value)
 	case reflect.Ptr:
-		return ptrToCode(g, valValue)
+		return ptrToCode(g, value)
 	case reflect.Struct:
-		return structToCode(g, valValue)
+		return structToCode(g, value)
 	default:
 		panic("unsupported kind")
 	}

@@ -1,4 +1,4 @@
-package recorder
+package testparrot
 
 import (
 	"testing"

@@ -1,4 +1,4 @@
-package recorder
+package testparrot
 
 // type RecordField struct {
 // 	name     string

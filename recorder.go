@@ -1,4 +1,4 @@
-package recorder
+package testparrot
 
 import "fmt"
 
@@ -64,7 +64,7 @@ func (r *KVRecorder) Record(name string, val interface{}) interface{} {
 	} else if val, ok := r.values[name]; ok {
 		return val
 	} else {
-		panic(fmt.Errorf("go-test-record: value '%s' not recorder", name))
+		panic(fmt.Errorf("go-test-record: value '%s' not recorded in recorder '%s'", name, r.name))
 	}
 
 	return val

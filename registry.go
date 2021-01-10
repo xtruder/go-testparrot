@@ -1,4 +1,4 @@
-package recorder
+package testparrot
 
 import (
 	"errors"
@@ -8,15 +8,15 @@ var DuplicateErr = errors.New("recorder with same name already exists")
 
 // RecordRegistry registers recorders and provides recorder initialization
 type Registry struct {
-	recorders map[string]Recorder
-	values    map[string][]Record
+	recorders   map[string]Recorder
+	recordCache map[string][]Record
 }
 
 // NewRegistry creates new Registry
 func NewRegistry() *Registry {
 	return &Registry{
-		recorders: map[string]Recorder{},
-		values:    map[string][]Record{},
+		recorders:   map[string]Recorder{},
+		recordCache: map[string][]Record{},
 	}
 }
 
@@ -32,7 +32,7 @@ func (r *Registry) Register(recorder Recorder) (Recorder, error) {
 
 	// if values have already been provided for a speicfic recorder, load
 	// them into recorder
-	if records, ok := r.values[recorder.Name()]; ok {
+	if records, ok := r.recordCache[recorder.Name()]; ok {
 		recorder.Load(records)
 	}
 
@@ -55,13 +55,25 @@ func (r *Registry) EnableRecording(enable bool) {
 	}
 }
 
-func (r *Registry) Load(values map[string][]Record) {
-	r.values = values
+// Load method loads records into recorder by name
+func (r *Registry) Load(name string, records []Record) {
+	recorder, ok := r.recorders[name]
 
-	// load records for all recorders that have already been registered
-	for name, records := range r.values {
-		if recorder, ok := r.recorders[name]; ok {
-			recorder.Load(records)
-		}
+	// if recorder is not yet registered, store records in cache
+	// so it can be loaded when registering
+	if !ok {
+		r.recordCache[name] = records
+		return
 	}
+
+	recorder.Load(records)
+}
+
+func (r *Registry) Recorders() []Recorder {
+	recorders := []Recorder{}
+	for _, recorder := range r.recorders {
+		recorders = append(recorders, recorder)
+	}
+
+	return recorders
 }
