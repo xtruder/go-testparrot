@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/vscode-remote/devcontainer.json or the definition README at
 // https://github.com/microsoft/vscode-dev-containers/tree/master/containers/docker-existing-dockerfile
 {
-  "name": "go-test-record",
+  "name": "go-testparrot",
   "dockerFile": "Dockerfile",
   "build": {
     "args": {
@@ -10,15 +10,15 @@
     }
   },
   "mounts": [
-    "source=go-test-record_devcontainer_nix,target=/nix,type=volume",
-    "source=go-test-record_devcontainer_direnv,target=/home/user/.config/direnv/allow,type=volume"
+    "source=go-testparrot_devcontainer_nix,target=/nix,type=volume",
+    "source=go-testparrot_devcontainer_direnv,target=/home/user/.config/direnv/allow,type=volume"
   ],
   "runArgs": [
     "--security-opt", "label=disable"
   ],
   "containerEnv": {
     "PATH": "/home/user/.nix-profile/bin:/home/user/.local/bin:/usr/local/bin:/usr/bin:/bin",
-    "PROJECT_DIR": "/workspaces/go-test-record"
+    "PROJECT_DIR": "/workspaces/go-testparrot"
   },
   
   // Set *default* container specific settings.json values on container create.

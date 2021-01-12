@@ -1,11 +1,25 @@
 package testparrot
 
 import (
+	"errors"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"path"
 	"reflect"
+	"runtime"
+	"strings"
 )
 
-func ValToPtr(val interface{}) interface{} {
+// current package name and path, we need those when generating, so we can
+// import testparrot package
+var (
+	pkgName = "testparrot"
+	pkgPath = reflect.TypeOf(Generator{}).PkgPath()
+)
+
+func valToPtr(val interface{}) interface{} {
 	switch v := val.(type) {
 	case bool:
 		return &v
@@ -42,36 +56,54 @@ func ValToPtr(val interface{}) interface{} {
 	}
 }
 
-func getFieldName(structPtr interface{}, fieldPtr interface{}) (name string) {
-	val := reflect.ValueOf(structPtr).Elem()
-	val2 := reflect.ValueOf(fieldPtr).Elem()
-
-	for i := 0; i < val.NumField(); i++ {
-		valueField := val.Field(i)
-		if valueField.Addr().Interface() == val2.Addr().Interface() {
-			return val.Type().Field(i).Name
-		}
+// getPkgInfo gets package path, name and fs location of current package
+func getPkgInfo(skip int, pkgNameFromSource bool) (pkgPath string, pkgName string, fsPath string, err error) {
+	pc, filename, _, ok := runtime.Caller(skip + 1)
+	if !ok {
+		err = errors.New("could not find package path")
+		return
 	}
+
+	fsPath = path.Dir(filename)
+
+	// example: github.com/xtruder/go-testparrot.TestValToCode.func1
+	funcName := runtime.FuncForPC(pc).Name()
+	lastSlash := strings.LastIndexByte(funcName, '/')
+	if lastSlash < 0 {
+		lastSlash = 0
+	}
+	firstDot := strings.IndexByte(funcName[lastSlash:], '.') + lastSlash
+
+	// everything until first for after last slash is package path
+	pkgPath = funcName[:firstDot]
+
+	// getting package name from package path is unreliable
+	pkgName = funcName[(lastSlash + 1):firstDot]
+
+	// retrive package name by parsing source. This is only usable if
+	// source code is avalible, like when testing.
+	if pkgNameFromSource {
+		var astFile *ast.File
+
+		// package name cannot be reliably retrived from runtime info, so it needs
+		// to be read from filesyste. This can only be used if source is provided.
+		fset := token.NewFileSet()
+		astFile, err = parser.ParseFile(fset, filename, nil, parser.PackageClauseOnly)
+		if err != nil {
+			return
+		}
+
+		if astFile.Name == nil {
+			err = fmt.Errorf("package name not found")
+			return
+		}
+
+		pkgName = astFile.Name.Name
+	}
+
 	return
 }
 
-func getStructName(val interface{}) string {
-	if t := reflect.TypeOf(val); t.Kind() == reflect.Ptr {
-		return t.Elem().Name()
-	} else {
-		return t.Name()
-	}
-}
-
-func setStructValue(structPtr interface{}, fieldName string, val interface{}) error {
-	structElem := reflect.ValueOf(structPtr).Elem()
-	field := structElem.FieldByName(fieldName)
-
-	if field == (reflect.Value{}) {
-		return fmt.Errorf("invalid field: %s", fieldName)
-	}
-
-	field.Set(reflect.ValueOf(val))
-
-	return nil
+func newErr(err error) error {
+	return fmt.Errorf("testparrot: %v", err)
 }

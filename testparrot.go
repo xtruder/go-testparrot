@@ -1,17 +1,11 @@
 package testparrot
 
-var R = NewRegistry()
+// R defines a global test recorder
+var R = NewRecorder()
 
 // export ValToPtr util method
-var VarToPtr = ValToPtr
+var VarToPtr = valToPtr
 
-// export global registry Load method
-var Load = R.Load
+var Record = R.Record
 
-// export global registry Register method
-var Register = R.Register
-
-// export global registry MustRegister method
-var MustRegister = R.MustRegister
-
-var EnableRecording = R.EnableRecording
+var RecordNext = R.RecordNext

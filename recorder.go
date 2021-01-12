@@ -1,94 +1,133 @@
 package testparrot
 
-import "fmt"
+import (
+	"fmt"
+	"testing"
+)
 
-type Record struct {
-	// Name defines name of record
-	Name string
+type Recording struct {
+	// Key defines record key
+	Key interface{}
 
-	// Value defines recorded value
+	// Value defines record value
 	Value interface{}
 }
 
-type RecordProvider interface {
-	Records() []Record
+type Recorder struct {
+	allRecordings map[string][]Recording
+
+	// counter defines counter for sequential recordings
+	counters map[string]int
+
+	// recordingEnabled defines whether recording is enabled
+	recordingEnabled bool
 }
 
-type Recorder interface {
-	// Init method initializes recorder by passing itself and recorder options
-	Init(self Recorder)
-
-	// Name method gets recorder name
-	Name() string
-
-	// Records returns list of recorded records
-	Records() []Record
-
-	// Load method loads list of records into recorder
-	Load([]Record)
-
-	// EnableRecording method enables or disables recording on recorder
-	EnableRecording(bool)
+// NewRecoder creates a new Recorder
+func NewRecorder() *Recorder {
+	return &Recorder{
+		allRecordings: map[string][]Recording{},
+		counters:      map[string]int{},
+	}
 }
 
-type baseRecorder struct {
-	name            string
-	enableRecording bool
+// Reset method resets recorder
+func (r *Recorder) Reset() {
+	r.allRecordings = map[string][]Recording{}
+	r.counters = map[string]int{}
 }
 
-func (r *baseRecorder) Name() string {
-	return r.name
+// Recorder method records value under specified key. If recording is enabled
+// Record returns provided value, otherwise it returns already recorded value.
+func (r *Recorder) Record(t *testing.T, key interface{}, value interface{}) interface{} {
+	value, err := r.record(t.Name(), key, value)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
 }
 
-func (r *baseRecorder) EnableRecording(enable bool) {
-	r.enableRecording = enable
+// RecordNext method records next value in sequence. If recording is enabled
+// Record returns provided value, otherwise it returns alreday recorded value.
+func (r *Recorder) RecordNext(t *testing.T, value interface{}) interface{} {
+	name := t.Name()
+
+	if _, ok := r.counters[name]; !ok {
+		r.counters[name] = 0
+	}
+
+	value, err := r.record(name, r.counters[name], value)
+	if err != nil {
+		panic(err)
+	}
+
+	// increase counter
+	r.counters[name]++
+
+	return value
 }
 
-type KVRecorder struct {
-	baseRecorder
-
-	values map[string]interface{}
+// EnableRecording enables test recording
+func (r *Recorder) EnableRecording(enable bool) {
+	r.recordingEnabled = enable
 }
 
-func NewKVRecorder(name string) *KVRecorder {
-	return &KVRecorder{baseRecorder: baseRecorder{name: name}}
+// RecordingEnabled returns whether recording is enabled
+func (r *Recorder) RecordingEnabled() bool {
+	return r.recordingEnabled
 }
 
-func (r *KVRecorder) Init(self Recorder) {
-	r.values = make(map[string]interface{})
+// Load method loads recording for a specific test name
+func (r *Recorder) Load(name string, recordings []Recording) {
+	if _, ok := r.allRecordings[name]; ok {
+		panic(newErr(fmt.Errorf("recordings already loaded for test '%s'", name)))
+	}
+
+	r.allRecordings[name] = recordings
 }
 
-func (r *KVRecorder) Record(name string, val interface{}) interface{} {
-	if r.enableRecording {
-		r.values[name] = val
-	} else if val, ok := r.values[name]; ok {
-		return val
+func (r *Recorder) record(name string, key interface{}, value interface{}) (interface{}, error) {
+	if !r.recordingEnabled {
+		value, err := r.getRecordValue(name, key)
+		if err != nil {
+			return nil, err
+		}
+
+		return value, nil
+	}
+
+	if err := r.setRecordValue(name, key, value); err != nil {
+		return nil, err
+	}
+
+	return value, nil
+}
+
+func (r *Recorder) getRecordValue(name string, key interface{}) (interface{}, error) {
+	if records, ok := r.allRecordings[name]; ok {
+		for _, record := range records {
+			if record.Key == key {
+				return record.Value, nil
+			}
+		}
+	}
+
+	return nil, newErr(fmt.Errorf("recording with key '%v' not found for test '%s'", key, name))
+}
+
+func (r *Recorder) setRecordValue(name string, key interface{}, value interface{}) error {
+	if records, ok := r.allRecordings[name]; ok {
+		for _, record := range records {
+			if record.Key == key {
+				return fmt.Errorf("recording with key '%v' already exists for test '%s'", key, name)
+			}
+		}
+
+		r.allRecordings[name] = append(records, Recording{key, value})
 	} else {
-		panic(fmt.Errorf("go-test-record: value '%s' not recorded in recorder '%s'", name, r.name))
+		r.allRecordings[name] = []Recording{{key, value}}
 	}
 
-	return val
-}
-
-func (r *KVRecorder) Value(name string) interface{} {
-	return r.values[name]
-}
-
-// Records method returns recroded records
-func (r *KVRecorder) Records() []Record {
-	records := []Record{}
-
-	for n, v := range r.values {
-		records = append(records, Record{n, v})
-	}
-
-	return records
-}
-
-// Load method loads records into recorder, does not load it in struct
-// yet, because you need to use Record method for that
-func (r *KVRecorder) Load(records []Record) {
-	for _, v := range records {
-		r.values[v.Name] = v.Value
-	}
+	return nil
 }
