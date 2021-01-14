@@ -5,8 +5,26 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"testing"
 )
+
+var (
+	enableRecordingFlag *bool
+	destFlag            *string
+	pkgPathFlag         *string
+	pkgNameFlag         *string
+)
+
+func init() {
+	// a bit of hackish was to check if tests are enabled, but seems to work reliably
+	if strings.HasSuffix(os.Args[0], ".test") {
+		enableRecordingFlag = flag.Bool("testparrot.record", false, "whether to enable testparrot recording")
+		destFlag = flag.String("testparrot.dest", "", "override destination path")
+		pkgPathFlag = flag.String("testparrot.pkgpath", "", "override package path")
+		pkgNameFlag = flag.String("testparrot.pkgname", "", "override package name")
+	}
+}
 
 // Helper method to use in TestMain for running tests
 func Run(m *testing.M) {
@@ -23,22 +41,23 @@ func Run(m *testing.M) {
 }
 
 // BeforeTests is method to use in TestMain before running tests
-func BeforeTests() {
-	beforeTests(R)
+func BeforeTests(recorder *Recorder) {
+	beforeTests(recorder)
 }
 
 // AfterTests is method to use in TestMain after running tests
-func AfterTests(recorder *Recorder) {
-	afterTests(R, "", 1)
+func AfterTests(recorder *Recorder, recorderVar string) {
+	afterTests(recorder, recorderVar, 1)
 }
 
 func beforeTests(recorder *Recorder) {
 
 	// define additional test flag for enabling testparrot recording and parse it
-	enableRecording := flag.Bool("testparrot.record", false, "whether to enable testparrot recording")
 	flag.Parse()
 
-	recorder.EnableRecording(*enableRecording)
+	if !recorder.RecordingEnabled() {
+		recorder.EnableRecording(*enableRecordingFlag)
+	}
 
 	// reset loaded values if recording is enabled
 	if recorder.RecordingEnabled() {
@@ -58,8 +77,21 @@ func afterTests(recorder *Recorder, recorderVar string, skip int) {
 		panic(newErr(err))
 	}
 
-	genFileName := fmt.Sprintf("%s_recording_test.go", pkgName)
-	genFilePath := path.Join(fsPath, genFileName)
+	var genFilePath string
+	if *destFlag == "" {
+		genFileName := fmt.Sprintf("%s_recording_test.go", pkgName)
+		genFilePath = path.Join(fsPath, genFileName)
+	} else {
+		genFilePath = *destFlag
+	}
+
+	if *pkgPathFlag != "" {
+		pkgPath = *pkgPathFlag
+	}
+
+	if *pkgNameFlag != "" {
+		pkgName = *pkgNameFlag
+	}
 
 	generator := NewGenerator(pkgPath, pkgName)
 	err = generator.GenerateToFile(recorder, recorderVar, genFilePath)
