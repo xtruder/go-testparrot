@@ -1,9 +1,17 @@
 ![tests](https://github.com/xtruder/go-testparrot/workflows/test/badge.svg)
 
-# go-testparrot
+# go-testparrot :parrot:
 
 go-testparrot records and replies expected test values, so you don't have
 to hardcode complex test values.
+
+## About
+
+Are you tired of hard coding values in tests?
+Do you copy paste failed test like as monkey?
+
+What if there would be a record button to record test values and reply them
+later, just like a parrot!
 
 ## Example
 
