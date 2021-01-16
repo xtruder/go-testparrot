@@ -18,7 +18,7 @@ later, just like a parrot!**
 - Simple interface for record and reply values based on sequential or key value.
 - Generation of recorded values in readable go code.
 
-## Usage
+## Quick start
 
 ### Create a package with some tests:
 
@@ -74,7 +74,7 @@ You can also use `go:generate` by placing comment like:
 
 in package under test and running `go generate <package>`
 
-### Running tests
+### Run tests
 
 Run tests like you woul ussually run them, but with recording disabled:
 
@@ -82,17 +82,9 @@ Run tests like you woul ussually run them, but with recording disabled:
 go test <package>
 ```
 
-## Development
+## Developing go-testparrot
 
-This project requires at least `go` version `1.15` installed.
-
-### Testing
-
-```bash
-go test ./
-```
-
-### VSCode
-
-If you are using [visual studio code](https://code.visualstudio.com/) you can open
-project in [vscode remote container](https://code.visualstudio.com/docs/remote/containers).
+See
+[CONTRIBUTING.md](https://github.com/xtruder/go-testparrot/blob/master/.github/CONTRIBUTING.md)
+for best practices and instructions on setting up your development environment
+to work on Packer.
