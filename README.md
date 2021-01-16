@@ -13,10 +13,16 @@ Do you **copy paste failed test values** like as monkey?
 **What if there would be a record button to record test values and reply them
 later, just like a parrot!**
 
-## Example
+### Features
+
+- Simple interface for record and reply values based on sequential or key value.
+- Generation of recorded values in readable go code.
+
+## Usage
+
+### Create a package with some tests:
 
 ```go
-//go:generate go test ./. -testparrot.record
 package example
 
 import (
@@ -27,10 +33,6 @@ import (
 
 func doSomething() string {
     return "value"
-}
-
-func doSomethingElse() int {
-    return 42
 }
 
 func TestSomething(t* testing.T) {
@@ -47,29 +49,38 @@ func TestSomething(t* testing.T) {
     }
 }
 
-func TestKV(t *testing.T) {
-    value1 := doSomething()
-    expected1 := testparrot.Record(t, "key1", value1)
-
-    if value1 != expected1 {
-        t.Errorf("doSomething() = %v; want %v", value1, expected1)
-    }
-
-    value2 := doSomethingElse()
-    expected2 := testparrot.Record(t, "key2", value2)
-
-    if value2 != expected2 {
-        t.Errorf("doSomethingElse() = %v; want %v", value2, expected2)
-    }
-}
-
 func TestMain(m *testing.M) {
 	testparrot.Run(m)
 }
 ```
 
-To record values you just need to run `go generate <package>` and recorded
-values will be saved to `<package>_recording_test.go` file in same package as tests.
+You must provide `TestMain` method that will run `testparrot.Run` of if you need additional steps after/before running tests, you can also use `testparrot.BeforeTests` and `testparrot.AfterTests` helper methods.
+
+### Record values
+
+To record values run tests with recording enabled:
+
+```bash
+go test <package> -testparrot.record
+```
+
+This will record values and save them into `<package>_recording_test.go` file in same directory as tests.
+
+You can also use `go:generate` by placing comment like:
+
+```go
+//go:generate go test ./ -testparrot.record
+```
+
+in package under test and running `go generate <package>`
+
+### Running tests
+
+Run tests like you woul ussually run them, but with recording disabled:
+
+```bash
+go test <package>
+```
 
 ## Development
 
