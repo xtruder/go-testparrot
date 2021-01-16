@@ -62,3 +62,18 @@ func TestMain(m *testing.M) {
 
 To record values you just need to run `go generate <package>` and recorded
 values will be saved to `<package>_recording_test.go` file in same package as tests.
+
+## Development
+
+This project requires at least `go` version `1.15` installed.
+
+### Testing
+
+```bash
+go test ./
+```
+
+### VSCode
+
+If you are using [visual studio code](https://code.visualstudio.com/) you can open
+project in [vscode remote container](https://code.visualstudio.com/docs/remote/containers).
