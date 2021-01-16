@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"sort"
 
 	. "github.com/dave/jennifer/jen"
 )
@@ -44,11 +45,21 @@ func (g *Generator) Generate(recorder *Recorder, recorderVar string, out io.Writ
 
 	f.HeaderComment(headerComment)
 
+	keys := make([]string, 0, len(recorder.allRecordings))
+
+	for key := range recorder.allRecordings {
+		keys = append(keys, key)
+	}
+
+	sort.Strings(keys)
+
 	statements := []Code{}
-	for testKey, recordings := range recorder.allRecordings {
-		var loadF *Statement
+	for _, key := range keys {
+		testKey := key
+		recordings := recorder.allRecordings[key]
 
 		// call load on global recorder or on locally defined recorder
+		var loadF *Statement
 		if recorder == R {
 			loadF = Qual(pkgPath, "R.Load")
 		} else {
