@@ -51,3 +51,6 @@ func TestMain(m *testing.M) {
 	testparrot.Run(m)
 }
 ```
+
+To record values you just need to run `go generate <package>` and recorded
+values will be saved to `<package>_recording_test.go` file in same package as tests.
