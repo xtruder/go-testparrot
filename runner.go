@@ -15,13 +15,6 @@ var (
 	pkgNameFlag         *string
 )
 
-func init() {
-	// a bit of hackish was to check if tests are enabled, but seems to work reliably
-	if isInTests() {
-		defineTestparrotFlags()
-	}
-}
-
 func defineTestparrotFlags() {
 	// if flags have not been yet define, define them
 	if flag.Lookup("testparrot.record") == nil {

@@ -11,6 +11,8 @@ import (
 )
 
 func TestBeforeTests(t *testing.T) {
+	defineTestparrotFlags()
+
 	t.Run("recording disabled", func(t *testing.T) {
 		recorder := NewRecorder()
 		recorder.Load("test", []Recording{{"key", "value"}})
@@ -42,6 +44,8 @@ func TestBeforeTests(t *testing.T) {
 }
 
 func TestAfterTests(t *testing.T) {
+	defineTestparrotFlags()
+
 	genPath := path.Join(t.TempDir(), "gen.go")
 	flag.Set("testparrot.dest", genPath)
 	defer flag.Set("testparrot.dest", "")
