@@ -6,6 +6,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"os"
 	"path"
 	"reflect"
 	"runtime"
@@ -102,6 +103,15 @@ func getPkgInfo(skip int, pkgNameFromSource bool) (pkgPath string, pkgName strin
 	}
 
 	return
+}
+
+func isInTests() bool {
+	for _, arg := range os.Args {
+		if strings.HasPrefix(arg, "-test.") {
+			return true
+		}
+	}
+	return false
 }
 
 func newErr(err error) error {

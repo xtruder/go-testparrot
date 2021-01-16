@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
 	"testing"
 )
 
@@ -18,7 +17,14 @@ var (
 
 func init() {
 	// a bit of hackish was to check if tests are enabled, but seems to work reliably
-	if strings.HasSuffix(os.Args[0], ".test") {
+	if isInTests() {
+		defineTestparrotFlags()
+	}
+}
+
+func defineTestparrotFlags() {
+	// if flags have not been yet define, define them
+	if flag.Lookup("testparrot.record") == nil {
 		enableRecordingFlag = flag.Bool("testparrot.record", false, "whether to enable testparrot recording")
 		destFlag = flag.String("testparrot.dest", "", "override destination path")
 		pkgPathFlag = flag.String("testparrot.pkgpath", "", "override package path")
@@ -53,6 +59,7 @@ func AfterTests(recorder *Recorder, recorderVar string) {
 func beforeTests(recorder *Recorder) {
 
 	// define additional test flag for enabling testparrot recording and parse it
+	defineTestparrotFlags()
 	flag.Parse()
 
 	if !recorder.RecordingEnabled() {
