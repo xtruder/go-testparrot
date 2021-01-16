@@ -25,6 +25,14 @@ import (
 	"github.com/xtruder/go-testparrot"
 )
 
+func doSomething() string {
+    return "value"
+}
+
+func doSomethingElse() int {
+    return 42
+}
+
 func TestSomething(t* testing.T) {
     value := doSomething()
 
@@ -35,7 +43,7 @@ func TestSomething(t* testing.T) {
     expected := testparrot.RecordNext(t, value)
 
     if value != expected {
-        t.Errorf("doSomething() = %w; want %w", value, expected)
+        t.Errorf("doSomething() = %v; want %v", value, expected)
     }
 }
 
@@ -44,14 +52,14 @@ func TestKV(t *testing.T) {
     expected1 := testparrot.Record(t, "key1", value1)
 
     if value1 != expected1 {
-        t.Errorf("doSomething() = %w; want %w", value1, expected1)
+        t.Errorf("doSomething() = %v; want %v", value1, expected1)
     }
 
     value2 := doSomethingElse()
     expected2 := testparrot.Record(t, "key2", value2)
 
     if value2 != expected2 {
-        t.Errorf("doSomethingElse() = %w; want %w", value2, expected2)
+        t.Errorf("doSomethingElse() = %v; want %v", value2, expected2)
     }
 }
 
