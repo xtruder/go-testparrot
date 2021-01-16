@@ -1,3 +1,5 @@
+![tests](https://github.com/xtruder/go-testparrot/workflows/test/badge.svg)
+
 # go-testparrot
 
 go-testparrot records and replies expected test values, so you don't have
