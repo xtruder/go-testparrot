@@ -7,11 +7,11 @@ to hardcode complex test values.
 
 ## About
 
-Are you tired of hard coding values in tests?
-Do you copy paste failed test like as monkey?
+Are you **tired of hard coding** values in tests?
+Do you **copy paste failed test values** like as monkey?
 
-What if there would be a record button to record test values and reply them
-later, just like a parrot!
+**What if there would be a record button to record test values and reply them
+later, just like a parrot!**
 
 ## Example
 
