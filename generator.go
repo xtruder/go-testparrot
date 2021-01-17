@@ -245,7 +245,16 @@ func valToCode(g *Generator, value reflect.Value, parent reflect.Value) (Code, e
 	// check if value is of special concrete types that cannot be easily generated
 	switch v := value.Interface().(type) {
 	case time.Time:
-		return Qual("time", "Parse").Call(Qual("time", "RFC3339Nano"), Lit(v.Format(time.RFC3339Nano))), nil
+		return Qual("time", "Date").Call(
+			Lit(v.Year()),
+			Lit(int(v.Month())),
+			Lit(v.Day()),
+			Lit(v.Hour()),
+			Lit(v.Minute()),
+			Lit(v.Second()),
+			Lit(v.Nanosecond()),
+			Qual("time", "FixedZone").Call(Lit(v.Location().String()), Lit(0)),
+		), nil
 	}
 
 	valType := value.Type()

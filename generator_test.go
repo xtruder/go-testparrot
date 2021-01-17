@@ -180,7 +180,7 @@ func TestValToCode(t *testing.T) {
 		{
 			name:     "date",
 			value:    time.Date(1999, 1, 2, 3, 4, 5, 0, time.UTC),
-			expected: "time.Parse(time.RFC3339Nano, \"1999-01-02T03:04:05Z\")",
+			expected: "time.Date(1999, 1, 2, 3, 4, 5, 0, time.FixedZone(\"UTC\", 0))",
 		},
 	}
 
