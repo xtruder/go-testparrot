@@ -237,6 +237,10 @@ func ptrToCode(g *Generator, ptrVal reflect.Value, parent reflect.Value) (Code, 
 }
 
 func valToCode(g *Generator, value reflect.Value, parent reflect.Value) (Code, error) {
+	if value == (reflect.Value{}) {
+		return Nil(), nil
+	}
+
 	valType := value.Type()
 
 	switch valType.Kind() {

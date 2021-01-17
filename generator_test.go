@@ -100,6 +100,11 @@ func TestValToCode(t *testing.T) {
 		expected string
 	}{
 		{
+			name:     "nil",
+			value:    nil,
+			expected: "nil",
+		},
+		{
 			name:     "literal str",
 			value:    "test",
 			expected: "\"test\"",
