@@ -8,12 +8,14 @@ func init() {
 	gotestparrot.R.Load("TestKVExample", []gotestparrot.Recording{{
 		Key: "dog1",
 		Value: Dog{
+			Age:   9,
 			Breed: "Terrier",
 			Name:  "Lido",
 		},
 	}, {
 		Key: "dog2",
 		Value: Dog{
+			Age:   12,
 			Breed: "Cavalier Kind Charles Spaniel",
 			Name:  "Rex",
 		},
@@ -21,14 +23,18 @@ func init() {
 	gotestparrot.R.Load("TestSequentialExample", []gotestparrot.Recording{{
 		Key: 0,
 		Value: Dog{
+			Age:   4,
 			Breed: "Terrier",
 			Name:  "Fido",
 		},
 	}, {
 		Key: 1,
 		Value: Dog{
+			Age:   8,
 			Breed: "American Foxhound",
 			Name:  "Mika",
+			Note: `this is an awesome nice dog and a good friend,
+must really have it!`,
 		},
 	}})
 }

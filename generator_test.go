@@ -105,6 +105,11 @@ func TestValToCode(t *testing.T) {
 			expected: "\"test\"",
 		},
 		{
+			name:     "multiline str",
+			value:    "long\nmulti\nline\nstrings\nare\ngenerated\nas\nmuliline\nstrings\nand\nthis\nmakes\neverything\nmore\nreadable",
+			expected: "`long\nmulti\nline\nstrings\nare\ngenerated\nas\nmuliline\nstrings\nand\nthis\nmakes\neverything\nmore\nreadable`",
+		},
+		{
 			name:     "ptr literal",
 			value:    valToPtr("test"),
 			expected: "gotestparrot.ValToPtr(\"test\")",
