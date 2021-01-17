@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"time"
 
 	. "github.com/dave/jennifer/jen"
 )
@@ -239,6 +240,12 @@ func ptrToCode(g *Generator, ptrVal reflect.Value, parent reflect.Value) (Code, 
 func valToCode(g *Generator, value reflect.Value, parent reflect.Value) (Code, error) {
 	if value == (reflect.Value{}) {
 		return Nil(), nil
+	}
+
+	// check if value is of special concrete types that cannot be easily generated
+	switch v := value.Interface().(type) {
+	case time.Time:
+		return Qual("time", "Parse").Call(Qual("time", "RFC3339Nano"), Lit(v.Format(time.RFC3339Nano))), nil
 	}
 
 	valType := value.Type()

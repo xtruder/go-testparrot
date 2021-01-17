@@ -8,6 +8,7 @@ import (
 	"path"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -175,6 +176,11 @@ func TestValToCode(t *testing.T) {
 				},
 			},
 			expected: "nestedStruct{\n\tV1: \"string\",\n\tV2: &nestedStruct{V1: \"value\"},\n}",
+		},
+		{
+			name:     "date",
+			value:    time.Date(1999, 1, 2, 3, 4, 5, 0, time.UTC),
+			expected: "time.Parse(time.RFC3339Nano, \"1999-01-02T03:04:05Z\")",
 		},
 	}
 
