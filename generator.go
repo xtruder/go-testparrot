@@ -1,10 +1,12 @@
 package testparrot
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 	"time"
 
 	. "github.com/dave/jennifer/jen"
@@ -237,6 +239,24 @@ func ptrToCode(g *Generator, ptrVal reflect.Value, parent reflect.Value) (Code, 
 	}
 }
 
+func litToCode(g *Generator, value reflect.Value) (Code, error) {
+
+	switch value.Type().Kind() {
+	case reflect.String:
+		val := value.Interface().(string)
+
+		hasNewlines := strings.Count(val, "\n") > 0
+		hasOnlyNewlineAtEnd := strings.Count(val, "\n") == 1 && strings.HasSuffix(val, "\n")
+		if hasNewlines && !hasOnlyNewlineAtEnd {
+			return Id(fmt.Sprintf("`%s`", val)), nil
+		}
+
+		fallthrough
+	default:
+		return Lit(value.Interface()), nil
+	}
+}
+
 func valToCode(g *Generator, value reflect.Value, parent reflect.Value) (Code, error) {
 	if value == (reflect.Value{}) {
 		return Nil(), nil
@@ -279,7 +299,7 @@ func valToCode(g *Generator, value reflect.Value, parent reflect.Value) (Code, e
 		reflect.Complex64,
 		reflect.Complex128,
 		reflect.String:
-		return Lit(value.Interface()), nil
+		return litToCode(g, value)
 	case reflect.Array, reflect.Slice:
 		return sliceToCode(g, value, parent)
 	case reflect.Interface:
