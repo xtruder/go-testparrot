@@ -44,12 +44,17 @@ func TestBeforeTests(t *testing.T) {
 }
 
 func TestAfterTests(t *testing.T) {
+	tmpDir := t.TempDir()
+
 	defineTestparrotFlags()
 
-	genPath := path.Join(t.TempDir(), "gen.go")
-	flag.Set("testparrot.dest", genPath)
+	flag.Set("testparrot.dest", tmpDir)
+	flag.Set("testparrot.filename", "gen.go")
 	defer flag.Set("testparrot.dest", "")
+	defer flag.Set("testparrot.filename", "")
 	flag.Parse()
+
+	genPath := path.Join(tmpDir, "gen.go")
 
 	t.Run("recording disabled", func(t *testing.T) {
 		recorder := NewRecorder()
@@ -62,13 +67,15 @@ func TestAfterTests(t *testing.T) {
 		require.True(t, os.IsNotExist(err))
 	})
 
-	t.Run("recording enabled", func(t *testing.T) {
+	t.Run("single file", func(t *testing.T) {
 		recorder := NewRecorder()
 		recorder.Load("test", []Recording{{"key", "value"}})
 		recorder.EnableRecording(true)
 
 		flag.Set("testparrot.pkgpath", "my/go-pkg")
+		defer flag.Set("testparrot.pkgpath", "")
 		flag.Set("testparrot.pkgname", "pkg")
+		defer flag.Set("testparrot.pkgname", "")
 
 		AfterTests(recorder, "recorder")
 
@@ -82,5 +89,47 @@ func TestAfterTests(t *testing.T) {
 		}
 
 		require.Contains(t, string(contents), "package pkg")
+	})
+
+	t.Run("split files", func(t *testing.T) {
+		recorder := NewRecorder()
+		recorder.Load("test1", []Recording{{"key1", "value1"}})
+		recorder.Load("test2", []Recording{{"key2", "value2"}})
+		recorder.testFilenames["test1"] = "file1_test.go"
+		recorder.testFilenames["test2"] = "file2_test.go"
+		recorder.EnableRecording(true)
+
+		flag.Set("testparrot.pkgpath", "my/go-pkg")
+		defer flag.Set("testparrot.pkgpath", "")
+		flag.Set("testparrot.pkgname", "pkg")
+		defer flag.Set("testparrot.pkgname", "")
+		flag.Set("testparrot.splitfiles", "true")
+		defer flag.Set("testparrot.splitfiles", "")
+
+		AfterTests(recorder, "recorder")
+
+		// make sure files were generated
+		require.FileExists(t, path.Join(tmpDir, "file1_recording_test.go"))
+		require.FileExists(t, path.Join(tmpDir, "file2_recording_test.go"))
+
+		contents, err := ioutil.ReadFile(path.Join(tmpDir, "file1_recording_test.go"))
+		if err != nil {
+			panic(err)
+		}
+
+		require.Contains(t, string(contents), "key1")
+		require.Contains(t, string(contents), "value1")
+		require.NotContains(t, string(contents), "key2")
+		require.NotContains(t, string(contents), "value2")
+
+		contents, err = ioutil.ReadFile(path.Join(tmpDir, "file2_recording_test.go"))
+		if err != nil {
+			panic(err)
+		}
+
+		require.Contains(t, string(contents), "key2")
+		require.Contains(t, string(contents), "value2")
+		require.NotContains(t, string(contents), "key1")
+		require.NotContains(t, string(contents), "value1")
 	})
 }

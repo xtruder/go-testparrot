@@ -2,6 +2,7 @@ package testparrot
 
 import (
 	"fmt"
+	"path"
 	"testing"
 )
 
@@ -19,6 +20,9 @@ type Recorder struct {
 	// counter defines counter for sequential recordings
 	counters map[string]int
 
+	// testFilenames where individual tests are
+	testFilenames map[string]string
+
 	// recordingEnabled defines whether recording is enabled
 	recordingEnabled bool
 }
@@ -28,6 +32,7 @@ func NewRecorder() *Recorder {
 	return &Recorder{
 		allRecordings: map[string][]Recording{},
 		counters:      map[string]int{},
+		testFilenames: map[string]string{},
 	}
 }
 
@@ -35,12 +40,22 @@ func NewRecorder() *Recorder {
 func (r *Recorder) Reset() {
 	r.allRecordings = map[string][]Recording{}
 	r.counters = map[string]int{}
+	r.testFilenames = map[string]string{}
 }
 
 // Recorder method records value under specified key. If recording is enabled
 // Record returns provided value, otherwise it returns already recorded value.
 func (r *Recorder) Record(t *testing.T, key interface{}, value interface{}) interface{} {
-	value, err := r.record(t.Name(), key, value)
+	name := t.Name()
+
+	testPath, err := getTestPath(t)
+	if err != nil {
+		panic(err)
+	}
+
+	r.testFilenames[name] = path.Base(testPath)
+
+	value, err = r.record(name, key, value)
 	if err != nil {
 		panic(err)
 	}
@@ -53,11 +68,18 @@ func (r *Recorder) Record(t *testing.T, key interface{}, value interface{}) inte
 func (r *Recorder) RecordNext(t *testing.T, value interface{}) interface{} {
 	name := t.Name()
 
+	testPath, err := getTestPath(t)
+	if err != nil {
+		panic(err)
+	}
+
+	r.testFilenames[name] = path.Base(testPath)
+
 	if _, ok := r.counters[name]; !ok {
 		r.counters[name] = 0
 	}
 
-	value, err := r.record(name, r.counters[name], value)
+	value, err = r.record(name, r.counters[name], value)
 	if err != nil {
 		panic(err)
 	}

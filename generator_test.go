@@ -49,7 +49,7 @@ func TestGenerate(t *testing.T) {
 			"{\n\t\tKey:   \"key1\",\n\t\tValue: \"value1\",\n\t}, {\n\t\tKey:   \"key2\",\n\t\tValue: 1,\n\t}})\n}\n"
 
 	t.Run("to string", func(t *testing.T) {
-		err := generator.Generate(recorder, "recorder", buf)
+		err := generator.Generate(recorder, GenOptions{RecorderVar: "recorder"}, buf)
 
 		require.NoError(t, err)
 		require.Equal(t, expected, buf.String())
@@ -57,7 +57,7 @@ func TestGenerate(t *testing.T) {
 
 	t.Run("to file", func(t *testing.T) {
 		genPath := path.Join(t.TempDir(), "gen.go")
-		err := generator.GenerateToFile(recorder, "recorder", genPath)
+		err := generator.GenerateToFile(recorder, GenOptions{RecorderVar: "recorder"}, genPath)
 		require.NoError(t, err)
 
 		_, err = os.Stat(genPath)

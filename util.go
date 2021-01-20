@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"testing"
 )
 
 // current package name and path, we need those when generating, so we can
@@ -54,6 +55,36 @@ func valToPtr(val interface{}) interface{} {
 	default:
 		return &v
 	}
+}
+
+// getTestPath method walks up the stack and tries to get path of file where test is in
+func getTestPath(t *testing.T) (string, error) {
+	skip := 0
+
+	// use only what is before slash in test name
+	testName := strings.Split(t.Name(), "/")[0]
+
+	for pc, path, _, ok := runtime.Caller(skip); ok; pc, path, _, ok = runtime.Caller(skip) {
+		funcName := runtime.FuncForPC(pc).Name()
+
+		lastSlash := strings.LastIndexByte(funcName, '/')
+		if lastSlash < 0 {
+			lastSlash = 0
+		}
+		firstDot := strings.IndexByte(funcName[lastSlash:], '.') + lastSlash
+
+		funcName = funcName[(firstDot + 1):]
+
+		// we assume name of the test name prefixes function name and that
+		// file has _test.go suffix
+		if strings.HasPrefix(funcName, testName) && strings.HasSuffix(path, "_test.go") {
+			return path, nil
+		}
+
+		skip++
+	}
+
+	return "", fmt.Errorf("test filename not found for: %s", t.Name())
 }
 
 // getPkgInfo gets package path, name and fs location of current package

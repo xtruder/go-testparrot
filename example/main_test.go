@@ -1,4 +1,4 @@
-//go:generate go test ./. -testparrot.record
+//go:generate go test ./. -testparrot.record -testparrot.splitfiles
 package example
 
 import (

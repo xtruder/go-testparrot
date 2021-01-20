@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
 var (
 	enableRecordingFlag *bool
+	splitFilesFlag      *bool
 	destFlag            *string
+	filenameFlag        *string
 	pkgPathFlag         *string
 	pkgNameFlag         *string
 )
@@ -19,7 +23,9 @@ func defineTestparrotFlags() {
 	// if flags have not been yet define, define them
 	if flag.Lookup("testparrot.record") == nil {
 		enableRecordingFlag = flag.Bool("testparrot.record", false, "whether to enable testparrot recording")
+		splitFilesFlag = flag.Bool("testparrot.splitfiles", false, "whether to split tests into multiple files")
 		destFlag = flag.String("testparrot.dest", "", "override destination path")
+		filenameFlag = flag.String("testparrot.filename", "", "override destination filename")
 		pkgPathFlag = flag.String("testparrot.pkgpath", "", "override package path")
 		pkgNameFlag = flag.String("testparrot.pkgname", "", "override package name")
 	}
@@ -72,17 +78,14 @@ func afterTests(recorder *Recorder, recorderVar string, skip int) {
 	}
 
 	// get package path and name, so we know where to put and name generated file
-	pkgPath, pkgName, fsPath, err := getPkgInfo(skip+1, true)
+	pkgPath, pkgName, pkgFsPath, err := getPkgInfo(skip+1, true)
 	if err != nil {
 		panic(newErr(err))
 	}
 
-	var genFilePath string
-	if *destFlag == "" {
-		genFileName := fmt.Sprintf("%s_recording_test.go", pkgName)
-		genFilePath = path.Join(fsPath, genFileName)
-	} else {
-		genFilePath = *destFlag
+	dest := pkgFsPath
+	if *destFlag != "" {
+		dest = *destFlag
 	}
 
 	if *pkgPathFlag != "" {
@@ -94,9 +97,46 @@ func afterTests(recorder *Recorder, recorderVar string, skip int) {
 	}
 
 	generator := NewGenerator(pkgPath, pkgName)
-	err = generator.GenerateToFile(recorder, recorderVar, genFilePath)
+	if *splitFilesFlag {
+		for testName, testFilename := range recorder.testFilenames {
+			genFilename := strings.TrimSuffix(testFilename, filepath.Ext(testFilename))
+			genFilename = strings.TrimSuffix(genFilename, "_test") + "_recording_test.go"
+			genFilePath := path.Join(dest, genFilename)
 
-	if err != nil {
-		panic(newErr(err))
+			filter := func(recordings map[string][]Recording) map[string][]Recording {
+				result := map[string][]Recording{}
+				for k, v := range recordings {
+					if testName == k {
+						result[k] = v
+					}
+				}
+
+				return result
+			}
+
+			opts := GenOptions{
+				RecorderVar: recorderVar,
+				Filter:      filter,
+			}
+			err = generator.GenerateToFile(recorder, opts, genFilePath)
+			if err != nil {
+				panic(newErr(err))
+			}
+		}
+	} else {
+		var genFilePath string
+		if *filenameFlag == "" {
+			genFileName := fmt.Sprintf("%s_recording_test.go", pkgName)
+			genFilePath = path.Join(dest, genFileName)
+		} else {
+			genFilePath = path.Join(dest, *filenameFlag)
+		}
+
+		opts := GenOptions{RecorderVar: recorderVar}
+		err = generator.GenerateToFile(recorder, opts, genFilePath)
+
+		if err != nil {
+			panic(newErr(err))
+		}
 	}
 }
