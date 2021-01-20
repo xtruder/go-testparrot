@@ -107,7 +107,7 @@ func afterTests(recorder *Recorder, recorderVar string, skip int) {
 				result := map[string][]Recording{}
 				for k, v := range recordings {
 					if testName == k {
-						result[k] = append(result[k], v...)
+						result[k] = v
 					}
 				}
 
