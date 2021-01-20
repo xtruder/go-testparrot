@@ -98,16 +98,26 @@ func afterTests(recorder *Recorder, recorderVar string, skip int) {
 
 	generator := NewGenerator(pkgPath, pkgName)
 	if *splitFilesFlag {
+		// group test names by filename
+		testNamesByFilename := map[string][]string{}
 		for testName, testFilename := range recorder.testFilenames {
+			testNamesByFilename[testFilename] = append(testNamesByFilename[testFilename], testName)
+		}
+
+		// for every filename generate recordings
+		for testFilename, fileTestNames := range testNamesByFilename {
 			genFilename := strings.TrimSuffix(testFilename, filepath.Ext(testFilename))
 			genFilename = strings.TrimSuffix(genFilename, "_test") + "_recording_test.go"
 			genFilePath := path.Join(dest, genFilename)
 
-			filter := func(recordings map[string][]Recording) map[string][]Recording {
+			filter := func(testRecordings map[string][]Recording) map[string][]Recording {
 				result := map[string][]Recording{}
-				for k, v := range recordings {
-					if testName == k {
-						result[k] = v
+
+				for testName, recordings := range testRecordings {
+					for _, fileTestName := range fileTestNames {
+						if fileTestName == testName {
+							result[testName] = recordings
+						}
 					}
 				}
 

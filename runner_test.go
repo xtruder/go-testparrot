@@ -94,9 +94,13 @@ func TestAfterTests(t *testing.T) {
 	t.Run("split files", func(t *testing.T) {
 		recorder := NewRecorder()
 		recorder.Load("test1", []Recording{{"key1", "value1"}})
-		recorder.Load("test2", []Recording{{"key2", "value2"}})
+		recorder.Load("test2", []Recording{{"key1", "value1"}})
+		recorder.Load("test3", []Recording{{"key2", "value2"}})
+		recorder.Load("test4", []Recording{{"key2", "value2"}})
 		recorder.testFilenames["test1"] = "file1_test.go"
-		recorder.testFilenames["test2"] = "file2_test.go"
+		recorder.testFilenames["test2"] = "file1_test.go"
+		recorder.testFilenames["test3"] = "file2_test.go"
+		recorder.testFilenames["test4"] = "file2_test.go"
 		recorder.EnableRecording(true)
 
 		flag.Set("testparrot.pkgpath", "my/go-pkg")
@@ -117,19 +121,19 @@ func TestAfterTests(t *testing.T) {
 			panic(err)
 		}
 
-		require.Contains(t, string(contents), "key1")
-		require.Contains(t, string(contents), "value1")
-		require.NotContains(t, string(contents), "key2")
-		require.NotContains(t, string(contents), "value2")
+		require.Contains(t, string(contents), "test1")
+		require.Contains(t, string(contents), "test2")
+		require.NotContains(t, string(contents), "test3")
+		require.NotContains(t, string(contents), "test4")
 
 		contents, err = ioutil.ReadFile(path.Join(tmpDir, "file2_recording_test.go"))
 		if err != nil {
 			panic(err)
 		}
 
-		require.Contains(t, string(contents), "key2")
-		require.Contains(t, string(contents), "value2")
-		require.NotContains(t, string(contents), "key1")
-		require.NotContains(t, string(contents), "value1")
+		require.Contains(t, string(contents), "test3")
+		require.Contains(t, string(contents), "test4")
+		require.NotContains(t, string(contents), "test1")
+		require.NotContains(t, string(contents), "test2")
 	})
 }
