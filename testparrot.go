@@ -4,7 +4,7 @@ package testparrot
 var R = NewRecorder()
 
 // export ValToPtr util method
-var VarToPtr = valToPtr
+var ValToPtr = valToPtr
 
 var Record = R.Record
 

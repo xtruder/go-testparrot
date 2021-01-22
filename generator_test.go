@@ -118,12 +118,12 @@ func TestValToCode(t *testing.T) {
 		{
 			name:     "ptr literal",
 			value:    valToPtr("test"),
-			expected: "gotestparrot.ValToPtr(\"test\")",
+			expected: "gotestparrot.ValToPtr(\"test\").(*string)",
 		},
 		{
 			name:     "ptr to ptr",
 			value:    valToPtr(valToPtr("test")),
-			expected: "gotestparrot.ValToPtr(gotestparrot.ValToPtr(\"test\"))",
+			expected: "gotestparrot.ValToPtr(gotestparrot.ValToPtr(\"test\").(*string))",
 		},
 		{
 			name: "simple map",
@@ -165,7 +165,7 @@ func TestValToCode(t *testing.T) {
 				V2: 10,
 				V3: valToPtr(1.1).(*float64),
 			},
-			expected: "simpleStruct{\n\tV1: \"test\",\n\tV2: 10,\n\tV3: gotestparrot.ValToPtr(1.1),\n}",
+			expected: "simpleStruct{\n\tV1: \"test\",\n\tV2: 10,\n\tV3: gotestparrot.ValToPtr(1.1).(*float64),\n}",
 		},
 		{
 			name: "nested struct",

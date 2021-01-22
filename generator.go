@@ -229,7 +229,7 @@ func ptrToCode(g *Generator, ptrVal reflect.Value, parent reflect.Value) (Code, 
 		reflect.Complex64,
 		reflect.Complex128,
 		reflect.String:
-		return valToPtrF.Call(Lit(val.Interface())), nil
+		return valToPtrF.Call(Lit(val.Interface())).Assert(Id("*" + valType.Name())), nil
 	case reflect.Interface:
 		return ptrToCode(g, val, ptrVal)
 	case reflect.Ptr:
