@@ -273,6 +273,13 @@ func ptrToCode(g *Generator, ptrVal reflect.Value, parent reflect.Value) (Code, 
 		}
 
 		return valToPtrF.Call(code), nil
+	case reflect.Slice:
+		code, err := valToCode(g, val, ptrVal)
+		if err != nil {
+			return nil, err
+		}
+
+		return valToPtrF.Call(code).Assert(Id("*" + valType.Name())), nil
 	default:
 		code, err := valToCode(g, val, ptrVal)
 		if err != nil {

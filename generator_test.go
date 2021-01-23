@@ -97,6 +97,8 @@ func TestValToCode(t *testing.T) {
 		V2 int
 	}
 
+	v := wrappedBytes("test")
+
 	tests := []struct {
 		name     string
 		value    interface{}
@@ -126,6 +128,11 @@ func TestValToCode(t *testing.T) {
 			name:     "ptr to ptr",
 			value:    valToPtr(valToPtr("test")),
 			expected: "gotestparrot.ValToPtr(gotestparrot.ValToPtr(\"test\").(*string))",
+		},
+		{
+			name:     "slice ptr to wrapped type",
+			value:    &v,
+			expected: "gotestparrot.ValToPtr(wrappedBytes(\"test\")).(*wrappedBytes)",
 		},
 		{
 			name: "simple map",
