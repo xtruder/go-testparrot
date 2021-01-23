@@ -7,6 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestValToPtr(t *testing.T) {
+	v := "test"
+	require.IsType(t, valToPtr("test"), &v)
+}
+
 func TestGetTestPath(t *testing.T) {
 	t.Run("subtest", func(t *testing.T) {
 		t.Run("subsubtest", func(t *testing.T) {

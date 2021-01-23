@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-	"time"
 )
 
 // current package name and path, we need those when generating, so we can
@@ -22,46 +21,9 @@ var (
 )
 
 func valToPtr(val interface{}) interface{} {
-	switch v := val.(type) {
-	case bool:
-		return &v
-	case int:
-		return &v
-	case int8:
-		return &v
-	case int16:
-		return &v
-	case int32:
-		return &v
-	case int64:
-		return &v
-	case uint:
-		return &v
-	case uint8:
-		return &v
-	case uint16:
-		return &v
-	case uint32:
-		return &v
-	case uint64:
-		return &v
-	case float32:
-		return &v
-	case float64:
-		return &v
-	case complex64:
-		return &v
-	case complex128:
-		return &v
-	case time.Time:
-		return &v
-	case string:
-		return &v
-	case []uint8:
-		return &v
-	default:
-		return &v
-	}
+	p := reflect.New(reflect.TypeOf(val))
+	p.Elem().Set(reflect.ValueOf(val))
+	return p.Interface()
 }
 
 // getTestPath method walks up the stack and tries to get path of file where test is in
