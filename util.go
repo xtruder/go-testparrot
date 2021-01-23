@@ -57,6 +57,8 @@ func valToPtr(val interface{}) interface{} {
 		return &v
 	case string:
 		return &v
+	case []uint8:
+		return &v
 	default:
 		return &v
 	}
