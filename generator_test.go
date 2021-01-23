@@ -73,6 +73,8 @@ func TestGenerate(t *testing.T) {
 }
 
 func TestValToCode(t *testing.T) {
+	type wrappedBytes []byte
+
 	type simpleStruct struct {
 		V1 string
 		V2 int
@@ -151,6 +153,11 @@ func TestValToCode(t *testing.T) {
 			expected: "[]Value{{\n\tV1: \"v1\",\n\tV2: 1,\n}, {\n\tV1: \"v2\",\n\tV2: 2,\n}}",
 		},
 		{
+			name:     "struct interface",
+			value:    []interface{}{1, "test", Value{"v1", 1}},
+			expected: "[]interface{}{1, \"test\", Value{\n\tV1: \"v1\",\n\tV2: 1,\n}}",
+		},
+		{
 			name: "interface map",
 			value: map[interface{}]interface{}{
 				"key": "value",
@@ -181,6 +188,16 @@ func TestValToCode(t *testing.T) {
 			name:     "date",
 			value:    time.Date(1999, 1, 2, 3, 4, 5, 0, time.UTC),
 			expected: "time.Date(1999, 1, 2, 3, 4, 5, 0, time.FixedZone(\"UTC\", 0))",
+		},
+		{
+			name:     "wrapped slice bytes",
+			value:    wrappedBytes{0xff, 0xfe, 0xfd},
+			expected: `wrappedBytes{uint8(0xff), uint8(0xfe), uint8(0xfd)}`,
+		},
+		{
+			name:     "wrapped slice string",
+			value:    wrappedBytes(`test`),
+			expected: `wrappedBytes("test")`,
 		},
 	}
 

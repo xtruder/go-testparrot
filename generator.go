@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	. "github.com/dave/jennifer/jen"
 )
@@ -116,21 +117,54 @@ func typeToCode(g *Generator, typ reflect.Type) *Statement {
 }
 
 func sliceToCode(g *Generator, sliceVal reflect.Value, parent reflect.Value) (Code, error) {
-	typ := sliceVal.Type().Elem()
+	typ := sliceVal.Type()
+	elemType := typ.Elem()
 
-	values := []Code{}
-	for i := 0; i < sliceVal.Len(); i++ {
-		elem := sliceVal.Index(i)
+	a := sliceVal.Type().Name()
+	fmt.Println(a)
 
-		code, err := valToCode(g, elem, sliceVal)
-		if err != nil {
-			return nil, err
+	var litValue Code
+	var values []Code
+	var err error
+
+	if elemType.Kind() == reflect.Uint8 {
+		s := reflect.New(reflect.SliceOf(elemType)).Elem()
+		s = reflect.AppendSlice(s, sliceVal)
+
+		val := s.Interface().([]byte)
+		if utf8.Valid(val) {
+			litValue, err = litToCode(g, reflect.ValueOf(string(val)))
+			if err != nil {
+				return nil, err
+			}
 		}
-
-		values = append(values, code)
 	}
 
-	return Index().Add(typeToCode(g, typ)).Values(values...), nil
+	if litValue == nil {
+		values = []Code{}
+		for i := 0; i < sliceVal.Len(); i++ {
+			elem := sliceVal.Index(i)
+
+			code, err := valToCode(g, elem, sliceVal)
+			if err != nil {
+				return nil, err
+			}
+
+			values = append(values, code)
+		}
+	}
+
+	if typ.Name() != "" {
+		prefix := Id(typ.Name())
+
+		if litValue != nil {
+			return prefix.Call(litValue), nil
+		}
+
+		return prefix.Values(values...), nil
+	}
+
+	return Index().Add(typeToCode(g, elemType)).Values(values...), nil
 }
 
 func mapToCode(g *Generator, mapVal reflect.Value, parent reflect.Value) (Code, error) {
