@@ -55,6 +55,8 @@ func valToPtr(val interface{}) interface{} {
 		return &v
 	case time.Time:
 		return &v
+	case string:
+		return &v
 	default:
 		return &v
 	}
