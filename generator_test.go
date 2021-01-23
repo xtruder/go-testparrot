@@ -132,7 +132,7 @@ func TestValToCode(t *testing.T) {
 		{
 			name:     "slice ptr to wrapped type",
 			value:    &v,
-			expected: "gotestparrot.ValToPtr(wrappedBytes(\"test\")).(*wrappedBytes)",
+			expected: "gotestparrot.ValToPtr(wrappedBytes(\"test\")).(*gotestparrot.wrappedBytes)",
 		},
 		{
 			name: "simple map",

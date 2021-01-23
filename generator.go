@@ -274,12 +274,19 @@ func ptrToCode(g *Generator, ptrVal reflect.Value, parent reflect.Value) (Code, 
 
 		return valToPtrF.Call(code), nil
 	case reflect.Slice:
-		code, err := valToCode(g, val, ptrVal)
+		code, err := sliceToCode(g, val, ptrVal)
 		if err != nil {
 			return nil, err
 		}
 
-		return valToPtrF.Call(code).Assert(Id("*" + valType.Name())), nil
+		var elemType Code
+		if valType.Name() == "" {
+			elemType = Id("[]" + valType.Elem().Name())
+		} else {
+			elemType = Qual(valType.PkgPath(), valType.Name())
+		}
+
+		return valToPtrF.Call(code).Assert(Id("*").Add(elemType)), nil
 	default:
 		code, err := valToCode(g, val, ptrVal)
 		if err != nil {
