@@ -127,7 +127,7 @@ func sliceToCode(g *Generator, sliceVal reflect.Value, parent reflect.Value) (Co
 	var values []Code
 	var err error
 
-	if sliceVal.Kind() == reflect.Slice && elemType.Kind() == reflect.Uint8 {
+	if sliceVal.Kind() == reflect.Slice && elemType.Kind() == reflect.Uint8 && typ.Name() != "" {
 		s := reflect.New(reflect.SliceOf(elemType)).Elem()
 		s = reflect.AppendSlice(s, sliceVal)
 

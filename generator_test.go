@@ -130,6 +130,11 @@ func TestValToCode(t *testing.T) {
 			expected: "gotestparrot.ValToPtr(gotestparrot.ValToPtr(\"test\").(*string))",
 		},
 		{
+			name:     "slice uint8",
+			value:    []uint8{0x62, 0x79, 0x74, 0x65, 0x61},
+			expected: "[]uint8{uint8(0x62), uint8(0x79), uint8(0x74), uint8(0x65), uint8(0x61)}",
+		},
+		{
 			name:     "slice ptr to wrapped type",
 			value:    &v,
 			expected: "gotestparrot.ValToPtr(wrappedBytes(\"test\")).(*gotestparrot.wrappedBytes)",
