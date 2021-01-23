@@ -155,7 +155,7 @@ func sliceToCode(g *Generator, sliceVal reflect.Value, parent reflect.Value) (Co
 	}
 
 	if typ.Name() != "" {
-		prefix := Id(typ.Name())
+		prefix := typeToCode(g, typ)
 
 		if litValue != nil {
 			return prefix.Call(litValue), nil
