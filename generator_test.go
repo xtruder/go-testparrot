@@ -192,9 +192,14 @@ func TestValToCode(t *testing.T) {
 			expected: "nestedStruct{\n\tV1: \"string\",\n\tV2: &nestedStruct{V1: \"value\"},\n}",
 		},
 		{
-			name:     "date",
+			name:     "time",
 			value:    time.Date(1999, 1, 2, 3, 4, 5, 0, time.UTC),
 			expected: "time.Date(1999, 1, 2, 3, 4, 5, 0, time.FixedZone(\"UTC\", 0))",
+		},
+		{
+			name:     "timeptr",
+			value:    valToPtr(time.Date(1999, 1, 2, 3, 4, 5, 0, time.UTC)).(*time.Time),
+			expected: "gotestparrot.ValToPtr(time.Date(1999, 1, 2, 3, 4, 5, 0, time.FixedZone(\"UTC\", 0))).(*time.Time)",
 		},
 		{
 			name:     "wrapped slice bytes",

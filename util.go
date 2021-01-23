@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
 
 // current package name and path, we need those when generating, so we can
@@ -51,6 +52,8 @@ func valToPtr(val interface{}) interface{} {
 	case complex64:
 		return &v
 	case complex128:
+		return &v
+	case time.Time:
 		return &v
 	default:
 		return &v
