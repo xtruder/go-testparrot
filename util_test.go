@@ -11,9 +11,11 @@ import (
 func TestDecode(t *testing.T) {
 	v := Decode([]byte("1999-01-02T03:04:05Z"), &time.Time{})
 	require.IsType(t, &time.Time{}, v)
+	require.Equal(t, valToPtr(must(time.Parse(time.RFC3339, "1999-01-02T03:04:05Z"))), v)
 
 	v = Decode([]byte("1999-01-02T03:04:05Z"), time.Time{})
 	require.IsType(t, time.Time{}, v)
+	require.Equal(t, must(time.Parse(time.RFC3339, "1999-01-02T03:04:05Z")), v)
 }
 
 func TestValToPtr(t *testing.T) {

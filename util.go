@@ -37,9 +37,12 @@ func panicOnErr(err error) {
 }
 
 func Decode(data []byte, target interface{}) interface{} {
-	targetPtr := target
+	var targetPtr interface{}
 
-	if reflect.ValueOf(target).Kind() == reflect.Struct {
+	value := reflect.ValueOf(target)
+	if value.Kind() == reflect.Ptr {
+		targetPtr = target
+	} else {
 		targetPtr = valToPtr(target)
 	}
 
@@ -54,7 +57,11 @@ func Decode(data []byte, target interface{}) interface{} {
 		panic(fmt.Errorf("unsupported type to decode %T", target))
 	}
 
-	return target
+	if value.Kind() == reflect.Ptr {
+		return target
+	}
+
+	return reflect.ValueOf(targetPtr).Elem().Interface()
 }
 
 // valToPtr gets pointer of a value using reflection
