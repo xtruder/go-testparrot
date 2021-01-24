@@ -97,8 +97,6 @@ func TestValToCode(t *testing.T) {
 		V2 int
 	}
 
-	v := wrappedBytes("test")
-
 	tests := []struct {
 		name     string
 		value    interface{}
@@ -121,13 +119,13 @@ func TestValToCode(t *testing.T) {
 		},
 		{
 			name:     "ptr literal",
-			value:    valToPtr("test"),
-			expected: "gotestparrot.ValToPtr(\"test\").(*string)",
+			value:    Ptr("test"),
+			expected: "gotestparrot.Ptr(\"test\").(*string)",
 		},
 		{
 			name:     "ptr to ptr",
-			value:    valToPtr(valToPtr("test")),
-			expected: "gotestparrot.ValToPtr(gotestparrot.ValToPtr(\"test\").(*string))",
+			value:    Ptr(Ptr("test")),
+			expected: "gotestparrot.Ptr(gotestparrot.Ptr(\"test\").(*string))",
 		},
 		{
 			name:     "slice uint8",
@@ -135,9 +133,9 @@ func TestValToCode(t *testing.T) {
 			expected: "[]uint8{uint8(0x62), uint8(0x79), uint8(0x74), uint8(0x65), uint8(0x61)}",
 		},
 		{
-			name:     "slice ptr to wrapped type",
-			value:    &v,
-			expected: "gotestparrot.ValToPtr(wrappedBytes(\"test\")).(*gotestparrot.wrappedBytes)",
+			name:     "wrapped slice ptr",
+			value:    Ptr(wrappedBytes("test")).(*wrappedBytes),
+			expected: "gotestparrot.Ptr(wrappedBytes(\"test\")).(*gotestparrot.wrappedBytes)",
 		},
 		{
 			name: "simple map",
@@ -182,9 +180,9 @@ func TestValToCode(t *testing.T) {
 			value: simpleStruct{
 				V1: "test",
 				V2: 10,
-				V3: valToPtr(1.1).(*float64),
+				V3: Ptr(1.1).(*float64),
 			},
-			expected: "simpleStruct{\n\tV1: \"test\",\n\tV2: 10,\n\tV3: gotestparrot.ValToPtr(1.1).(*float64),\n}",
+			expected: "simpleStruct{\n\tV1: \"test\",\n\tV2: 10,\n\tV3: gotestparrot.Ptr(1.1).(*float64),\n}",
 		},
 		{
 			name: "nested struct",
@@ -198,13 +196,13 @@ func TestValToCode(t *testing.T) {
 		},
 		{
 			name:     "time",
-			value:    time.Date(1999, 1, 2, 3, 4, 5, 0, time.UTC),
-			expected: "time.Date(1999, 1, 2, 3, 4, 5, 0, time.FixedZone(\"UTC\", 0))",
+			value:    time.Date(1999, 1, 2, 3, 4, 5, 0, time.FixedZone("UTC-8", -8*60*60)),
+			expected: "gotestparrot.Decode([]byte(\"1999-01-02T03:04:05-08:00\"), time.Time{}).(time.Time)",
 		},
 		{
 			name:     "timeptr",
-			value:    valToPtr(time.Date(1999, 1, 2, 3, 4, 5, 0, time.UTC)).(*time.Time),
-			expected: "gotestparrot.ValToPtr(time.Date(1999, 1, 2, 3, 4, 5, 0, time.FixedZone(\"UTC\", 0))).(*time.Time)",
+			value:    valToPtr(time.Date(1999, 1, 2, 3, 4, 5, 0, time.FixedZone("UTC-8", -8*60*60))).(*time.Time),
+			expected: "gotestparrot.Decode([]byte(\"1999-01-02T03:04:05-08:00\"), &time.Time{}).(*time.Time)",
 		},
 		{
 			name:     "wrapped slice bytes",

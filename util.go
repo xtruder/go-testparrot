@@ -1,6 +1,8 @@
 package testparrot
 
 import (
+	"encoding"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"go/ast"
@@ -20,6 +22,42 @@ var (
 	pkgPath = reflect.TypeOf(Generator{}).PkgPath()
 )
 
+func must(val interface{}, err error) interface{} {
+	if err != nil {
+		panic(err)
+	}
+
+	return val
+}
+
+func panicOnErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func Decode(data []byte, target interface{}) interface{} {
+	targetPtr := target
+
+	if reflect.ValueOf(target).Kind() == reflect.Struct {
+		targetPtr = valToPtr(target)
+	}
+
+	switch v := targetPtr.(type) {
+	case encoding.TextUnmarshaler:
+		panicOnErr(v.UnmarshalText(data))
+	case json.Unmarshaler:
+		panicOnErr(v.UnmarshalJSON(data))
+	case encoding.BinaryUnmarshaler:
+		panicOnErr(v.UnmarshalBinary(data))
+	default:
+		panic(fmt.Errorf("unsupported type to decode %T", target))
+	}
+
+	return target
+}
+
+// valToPtr gets pointer of a value using reflection
 func valToPtr(val interface{}) interface{} {
 	p := reflect.New(reflect.TypeOf(val))
 	p.Elem().Set(reflect.ValueOf(val))
