@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -362,6 +363,31 @@ func litToCode(g *Generator, value reflect.Value) (Code, error) {
 	}
 }
 
+func timeToCode(time *time.Time) Code {
+	loc, offset := time.Zone()
+
+	return Qual("time", "Date").Call(
+		Lit(time.Year()),
+		Lit(int(time.Month())),
+		Lit(time.Day()),
+		Lit(time.Hour()),
+		Lit(time.Minute()),
+		Lit(time.Second()),
+		Lit(time.Nanosecond()),
+		Qual("time", "FixedZone").Call(Lit(loc), Lit(offset)))
+}
+
+func specialToCode(g *Generator, value reflect.Value, parent reflect.Value) (Code, error) {
+	switch v := value.Interface().(type) {
+	case time.Time:
+		return timeToCode(&v), nil
+	case *time.Time:
+		return Qual(pkgPath, ptrF).Call(timeToCode(v)).Assert(Op("*").Qual("time", "Time")), nil
+	}
+
+	return nil, nil
+}
+
 func marshalersToCode(g *Generator, value reflect.Value, parent reflect.Value) (Code, error) {
 	switch v := value.Interface().(type) {
 	case encoding.TextMarshaler:
@@ -420,6 +446,10 @@ func isEmptyStructSkipPrivateFields(structValue reflect.Value) bool {
 func valToCode(g *Generator, value reflect.Value, parent reflect.Value) (Code, error) {
 	if value == (reflect.Value{}) {
 		return Nil(), nil
+	}
+
+	if code, err := specialToCode(g, value, parent); code != nil || err != nil {
+		return code, err
 	}
 
 	switch value.Type().Kind() {
