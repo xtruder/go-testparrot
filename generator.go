@@ -199,21 +199,28 @@ func mapToCode(g *Generator, mapVal reflect.Value, parent reflect.Value) (Code, 
 	return Map(typeToCode(g, keyType)).Add(typeCode).Values(values), nil
 }
 
-func decodeValueToCode(g *Generator, value Code, structType reflect.Type) Code {
+func decodeValueToCode(g *Generator, lit Code, value reflect.Value) Code {
+	var structType reflect.Type
 	var valueTypeCode *Statement
 	var assertCode *Statement
 
-	if structType.Kind() == reflect.Ptr {
-		structType = structType.Elem()
+	switch value.Kind() {
+	case reflect.Ptr:
+		structType = value.Elem().Type()
 		valueTypeCode = Op("&").Add(typeToCode(g, structType))
 		assertCode = Op("*").Add(typeToCode(g, structType))
-	} else {
+	case reflect.Interface:
+		structType = value.Elem().Type()
+		valueTypeCode = typeToCode(g, structType)
+		assertCode = typeToCode(g, structType)
+	default:
+		structType = value.Type()
 		valueTypeCode = typeToCode(g, structType)
 		assertCode = typeToCode(g, structType)
 	}
 
 	return Qual(pkgPath, decodeF).
-		Call(value, valueTypeCode.Values()).
+		Call(lit, valueTypeCode.Values()).
 		Assert(assertCode)
 
 }
@@ -374,7 +381,7 @@ func marshalersToCode(g *Generator, value reflect.Value, parent reflect.Value) (
 			return nil, err
 		}
 
-		return decodeValueToCode(g, litValue, value.Type()), nil
+		return decodeValueToCode(g, litValue, value), nil
 	case json.Marshaler:
 		data, err := v.MarshalJSON()
 		if err != nil {
@@ -386,7 +393,7 @@ func marshalersToCode(g *Generator, value reflect.Value, parent reflect.Value) (
 			return nil, err
 		}
 
-		return decodeValueToCode(g, litValue, value.Type()), nil
+		return decodeValueToCode(g, litValue, value), nil
 	case encoding.BinaryMarshaler:
 		data, err := v.MarshalBinary()
 		if err != nil {
@@ -398,7 +405,7 @@ func marshalersToCode(g *Generator, value reflect.Value, parent reflect.Value) (
 			return nil, err
 		}
 
-		return decodeValueToCode(g, litValue, value.Type()), nil
+		return decodeValueToCode(g, litValue, value), nil
 	default:
 		return nil, nil
 	}

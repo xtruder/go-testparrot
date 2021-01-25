@@ -225,6 +225,13 @@ func TestValToCode(t *testing.T) {
 			value:    valToPtr(uuid.MustParse("6ba7b814-9dad-11d1-80b4-00c04fd430c8")),
 			expected: "gotestparrot.Decode(\"6ba7b814-9dad-11d1-80b4-00c04fd430c8\", &uuid.UUID{}).(*uuid.UUID)",
 		},
+		{
+			name: "time interface slice",
+			value: []interface{}{
+				must(time.Parse(time.RFC3339, "1999-01-02T03:04:05Z")),
+			},
+			expected: "[]interface{}{gotestparrot.Decode(\"1999-01-02T03:04:05Z\", time.Time{}).(time.Time)}",
+		},
 	}
 
 	for _, test := range tests {
