@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -197,12 +198,12 @@ func TestValToCode(t *testing.T) {
 		{
 			name:     "time",
 			value:    time.Date(1999, 1, 2, 3, 4, 5, 0, time.FixedZone("UTC-8", -8*60*60)),
-			expected: "gotestparrot.Decode([]byte(\"1999-01-02T03:04:05-08:00\"), time.Time{}).(time.Time)",
+			expected: "gotestparrot.Decode(\"1999-01-02T03:04:05-08:00\", time.Time{}).(time.Time)",
 		},
 		{
 			name:     "timeptr",
 			value:    valToPtr(time.Date(1999, 1, 2, 3, 4, 5, 0, time.FixedZone("UTC-8", -8*60*60))).(*time.Time),
-			expected: "gotestparrot.Decode([]byte(\"1999-01-02T03:04:05-08:00\"), &time.Time{}).(*time.Time)",
+			expected: "gotestparrot.Decode(\"1999-01-02T03:04:05-08:00\", &time.Time{}).(*time.Time)",
 		},
 		{
 			name:     "wrapped slice bytes",
@@ -213,6 +214,16 @@ func TestValToCode(t *testing.T) {
 			name:     "wrapped slice string",
 			value:    wrappedBytes(`test`),
 			expected: `wrappedBytes("test")`,
+		},
+		{
+			name:     "uuid",
+			value:    uuid.MustParse("6ba7b814-9dad-11d1-80b4-00c04fd430c8"),
+			expected: "gotestparrot.Decode(\"6ba7b814-9dad-11d1-80b4-00c04fd430c8\", uuid.UUID{}).(uuid.UUID)",
+		},
+		{
+			name:     "uuid ptr",
+			value:    valToPtr(uuid.MustParse("6ba7b814-9dad-11d1-80b4-00c04fd430c8")),
+			expected: "gotestparrot.Decode(\"6ba7b814-9dad-11d1-80b4-00c04fd430c8\", &uuid.UUID{}).(*uuid.UUID)",
 		},
 	}
 

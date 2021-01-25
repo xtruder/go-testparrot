@@ -213,8 +213,7 @@ func decodeValueToCode(g *Generator, value Code, structType reflect.Type) Code {
 	}
 
 	return Qual(pkgPath, decodeF).
-		Call(
-			Index().Byte().Parens(value), valueTypeCode.Values()).
+		Call(value, valueTypeCode.Values()).
 		Assert(assertCode)
 
 }
@@ -388,6 +387,18 @@ func marshalersToCode(g *Generator, value reflect.Value, parent reflect.Value) (
 		}
 
 		return decodeValueToCode(g, litValue, value.Type()), nil
+	case encoding.BinaryMarshaler:
+		data, err := v.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+
+		litValue, err := litToCode(g, reflect.ValueOf(data))
+		if err != nil {
+			return nil, err
+		}
+
+		return decodeValueToCode(g, litValue, value.Type()), nil
 	default:
 		return nil, nil
 	}
@@ -422,6 +433,11 @@ func valToCode(g *Generator, value reflect.Value, parent reflect.Value) (Code, e
 		return Nil(), nil
 	}
 
+	code, err := marshalersToCode(g, value, parent)
+	if code != nil || err != nil {
+		return code, err
+	}
+
 	switch value.Type().Kind() {
 	// for most values construct literal values
 	case
@@ -450,26 +466,8 @@ func valToCode(g *Generator, value reflect.Value, parent reflect.Value) (Code, e
 	case reflect.Map:
 		return mapToCode(g, value, parent)
 	case reflect.Ptr:
-		// check if is empty struct, if we ignore private fields
-		// and in such case apply marshallers
-		if isEmptyStructSkipPrivateFields(value) {
-			code, err := marshalersToCode(g, value, parent)
-			if code != nil || err != nil {
-				return code, err
-			}
-		}
-
 		return ptrToCode(g, value, parent)
 	case reflect.Struct:
-		// check if is empty struct, if we ignore private fields
-		// and in such case apply marshallers
-		if isEmptyStructSkipPrivateFields(value) {
-			code, err := marshalersToCode(g, value, parent)
-			if code != nil || err != nil {
-				return code, err
-			}
-		}
-
 		return structToCode(g, value, parent)
 	default:
 		panic("unsupported kind")

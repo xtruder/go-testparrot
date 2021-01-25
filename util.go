@@ -36,7 +36,7 @@ func panicOnErr(err error) {
 	}
 }
 
-func Decode(data []byte, target interface{}) interface{} {
+func Decode(data interface{}, target interface{}) interface{} {
 	var targetPtr interface{}
 
 	value := reflect.ValueOf(target)
@@ -46,15 +46,25 @@ func Decode(data []byte, target interface{}) interface{} {
 		targetPtr = valToPtr(target)
 	}
 
+	var bytes []byte
+	switch v := data.(type) {
+	case string:
+		bytes = []byte(v)
+	case []byte:
+		bytes = v
+	default:
+		panic(fmt.Sprintf("Decode: unsupported data type: %T", data))
+	}
+
 	switch v := targetPtr.(type) {
 	case encoding.TextUnmarshaler:
-		panicOnErr(v.UnmarshalText(data))
+		panicOnErr(v.UnmarshalText([]byte(bytes)))
 	case json.Unmarshaler:
-		panicOnErr(v.UnmarshalJSON(data))
+		panicOnErr(v.UnmarshalJSON(bytes))
 	case encoding.BinaryUnmarshaler:
-		panicOnErr(v.UnmarshalBinary(data))
+		panicOnErr(v.UnmarshalBinary(bytes))
 	default:
-		panic(fmt.Errorf("unsupported type to decode %T", target))
+		panic(fmt.Sprintf("unsupported type to decode %T", target))
 	}
 
 	if value.Kind() == reflect.Ptr {
