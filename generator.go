@@ -309,7 +309,7 @@ func ptrToCode(g *Generator, ptrVal reflect.Value, parent reflect.Value) (Code, 
 			return nil, err
 		}
 
-		return ptrF.Call(lit).Assert(Id("*" + valType.Name())), nil
+		return ptrF.Call(lit).Assert(Op("*").Add(typeToCode(g, valType))), nil
 	case reflect.Struct:
 		code, err := valToCode(g, val, ptrVal)
 		if err != nil {
