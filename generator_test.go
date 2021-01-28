@@ -261,10 +261,14 @@ func TestValToCode(t *testing.T) {
 				}
 				Field5 Value
 				Field6 **[]Value
+				Field7 struct {
+					Value
+					Value2 Value
+				}
 			}{},
 			expected: "struct {\n\tField1 string `json:\"key1\"`\n\tField2 struct {\n\t\tField3 string\n\t\tField4 int\n\t} " +
 				"`json:\"key2\"`\n\tField3 []struct {\n\t\tField1 string\n\t\tField2 int\n\t}\n\tField4 *struct {\n\t\tField1 " +
-				"int\n\t}\n\tField5 Value\n\tField6 **[]Value\n}{}",
+				"int\n\t}\n\tField5 Value\n\tField6 **[]Value\n\tField7 struct {\n\t\tValue\n\t\tValue2 Value\n\t}\n}{}",
 		},
 		{
 			name:     "anonymous slice struct",

@@ -117,7 +117,12 @@ func typeToCode(g *Generator, typ reflect.Type) *Statement {
 		for i := 0; i < typ.NumField(); i++ {
 			fieldType := typ.Field(i)
 
-			field := Id(fieldType.Name).Add(typeToCode(g, fieldType.Type))
+			var field *Statement
+			if fieldType.Anonymous {
+				field = typeToCode(g, fieldType.Type)
+			} else {
+				field = Id(fieldType.Name).Add(typeToCode(g, fieldType.Type))
+			}
 
 			if fieldType.Tag != "" {
 				field = field.Id(fmt.Sprintf("`%s`", fieldType.Tag))
