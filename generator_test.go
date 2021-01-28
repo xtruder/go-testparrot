@@ -239,6 +239,11 @@ func TestValToCode(t *testing.T) {
 			value:    Enum("test"),
 			expected: `Enum("test")`,
 		},
+		{
+			name:     "enum ptr",
+			value:    valToPtr(Enum("test")).(*Enum),
+			expected: `gotestparrot.Ptr(Enum("test")).(*Enum)`,
+		},
 	}
 
 	for _, test := range tests {
