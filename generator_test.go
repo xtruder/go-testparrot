@@ -244,6 +244,33 @@ func TestValToCode(t *testing.T) {
 			value:    valToPtr(Enum("test")).(*Enum),
 			expected: `gotestparrot.Ptr(Enum("test")).(*Enum)`,
 		},
+		{
+			name: "anonymous struct",
+			value: struct {
+				Field1 string `json:"key1"`
+				Field2 struct {
+					Field3 string
+					Field4 int
+				} `json:"key2"`
+				Field3 []struct {
+					Field1 string
+					Field2 int
+				}
+				Field4 *struct {
+					Field1 int
+				}
+				Field5 Value
+				Field6 **[]Value
+			}{},
+			expected: "struct {\n\tField1 string `json:\"key1\"`\n\tField2 struct {\n\t\tField3 string\n\t\tField4 int\n\t} " +
+				"`json:\"key2\"`\n\tField3 []struct {\n\t\tField1 string\n\t\tField2 int\n\t}\n\tField4 *struct {\n\t\tField1 " +
+				"int\n\t}\n\tField5 Value\n\tField6 **[]Value\n}{}",
+		},
+		{
+			name:     "anonymous slice struct",
+			value:    []struct{ Field1 string }{},
+			expected: "[]struct {\n\tField1 string\n}{}",
+		},
 	}
 
 	for _, test := range tests {

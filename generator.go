@@ -108,15 +108,46 @@ func typeToCode(g *Generator, typ reflect.Type) *Statement {
 	switch typ.Kind() {
 	case reflect.Interface:
 		return Interface()
-	default:
-		pkgPath := typ.PkgPath()
-
-		if pkgPath == "" || g.pkgPath == pkgPath {
-			return Id(typ.Name())
+	case reflect.Struct:
+		if typ.Name() != "" {
+			break
 		}
 
-		return Qual(pkgPath, typ.Name())
+		fields := []Code{}
+		for i := 0; i < typ.NumField(); i++ {
+			fieldType := typ.Field(i)
+
+			field := Id(fieldType.Name).Add(typeToCode(g, fieldType.Type))
+
+			if fieldType.Tag != "" {
+				field = field.Id(fmt.Sprintf("`%s`", fieldType.Tag))
+			}
+
+			fields = append(fields, field)
+		}
+
+		return Struct(fields...)
+	case reflect.Slice:
+		if typ.Name() != "" {
+			break
+		}
+
+		return Index().Add(typeToCode(g, typ.Elem()))
+	case reflect.Ptr:
+		if typ.Name() != "" {
+			break
+		}
+
+		return Op("*").Add(typeToCode(g, typ.Elem()))
 	}
+
+	pkgPath := typ.PkgPath()
+
+	if pkgPath == "" || g.pkgPath == pkgPath {
+		return Id(typ.Name())
+	}
+
+	return Qual(pkgPath, typ.Name())
 }
 
 func sliceToCode(g *Generator, sliceVal reflect.Value, parent reflect.Value) (Code, error) {
@@ -258,13 +289,6 @@ func structToCode(g *Generator, structVal reflect.Value, parent reflect.Value) (
 		}
 
 		values[Id(fieldType.Name)] = code
-	}
-
-	// if struct is empty, we can try if we can apply marshalers to get actual value
-	if len(values) == 0 {
-		if code, err := marshalersToCode(g, structVal, parent); code != nil {
-			return code, err
-		}
 	}
 
 	// if parent is a slice and struct type is same as slice type, we can omit struct type
