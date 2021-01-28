@@ -98,6 +98,8 @@ func TestValToCode(t *testing.T) {
 		V2 int
 	}
 
+	type Enum string
+
 	tests := []struct {
 		name     string
 		value    interface{}
@@ -231,6 +233,11 @@ func TestValToCode(t *testing.T) {
 				must(time.Parse(time.RFC3339, "1999-01-02T03:04:05Z")),
 			},
 			expected: "[]interface{}{gotestparrot.Decode(\"1999-01-02T03:04:05Z\", time.Time{}).(time.Time)}",
+		},
+		{
+			name:     "enum",
+			value:    Enum("test"),
+			expected: `Enum("test")`,
 		},
 	}
 

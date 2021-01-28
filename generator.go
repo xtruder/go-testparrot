@@ -357,8 +357,63 @@ func strToCode(g *Generator, val string) (Code, error) {
 	return Lit(val), nil
 }
 
+func underlyingType(t reflect.Type) reflect.Type {
+	switch t.Kind() {
+	// for most values construct literal values
+	case reflect.Bool:
+		return reflect.TypeOf(false)
+	case reflect.Int:
+		return reflect.TypeOf(0)
+	case reflect.Int8:
+		return reflect.TypeOf(int8(0))
+	case reflect.Int16:
+		return reflect.TypeOf(int16(0))
+	case reflect.Int32:
+		return reflect.TypeOf(int32(0))
+	case reflect.Int64:
+		return reflect.TypeOf(int64(0))
+	case reflect.Uint:
+		return reflect.TypeOf(uint(0))
+	case reflect.Uint8:
+		return reflect.TypeOf(uint8(0))
+	case reflect.Uint16:
+		return reflect.TypeOf(uint16(0))
+	case reflect.Uint32:
+		return reflect.TypeOf(uint32(0))
+	case reflect.Uint64:
+		return reflect.TypeOf(uint64(0))
+	case reflect.Uintptr:
+		return reflect.TypeOf(uintptr(0))
+	case reflect.Float32:
+		return reflect.TypeOf(float32(0))
+	case reflect.Float64:
+		return reflect.TypeOf(float64(0))
+	case reflect.Complex64:
+		return reflect.TypeOf(complex64(0))
+	case reflect.Complex128:
+		return reflect.TypeOf(complex128(0))
+	case reflect.String:
+		return reflect.TypeOf("")
+	}
+
+	return nil
+}
+
 func litToCode(g *Generator, value reflect.Value) (Code, error) {
 	val := value.Interface()
+
+	if val == nil {
+		return Nil(), nil
+	}
+
+	if value.Type().PkgPath() != "" {
+		v, err := litToCode(g, value.Convert(underlyingType(value.Type())))
+		if err != nil {
+			return nil, err
+		}
+
+		return typeToCode(g, value.Type()).Call(v), nil
+	}
 
 	switch val.(type) {
 	case string:
