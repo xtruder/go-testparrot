@@ -385,6 +385,7 @@ func strToCode(g *Generator, val string) (Code, error) {
 	hasOnlyNewlineAtEnd := strings.Count(val, "\n") == 1 && strings.HasSuffix(val, "\n")
 
 	if hasNewlines && !hasOnlyNewlineAtEnd {
+		val = strings.ReplaceAll(val, "`", "`+\"`\"+`")
 		return Id(fmt.Sprintf("`%s`", val)), nil
 	}
 

@@ -121,6 +121,11 @@ func TestValToCode(t *testing.T) {
 			expected: "`long\nmulti\nline\nstrings\nare\ngenerated\nas\nmuliline\nstrings\nand\nthis\nmakes\neverything\nmore\nreadable`",
 		},
 		{
+			name:     "multiline bakcticks escape",
+			value:    "long\nmulti\nline\nstrings\nare\ngenerated`\nas\nmuliline`\nstrings\nand\nthis\nmakes\neverything\nmore\nreadable",
+			expected: "`long\nmulti\nline\nstrings\nare\ngenerated` + \"`\" + `\nas\nmuliline` + \"`\" + `\nstrings\nand\nthis\nmakes\neverything\nmore\nreadable`",
+		},
+		{
 			name:     "ptr literal",
 			value:    Ptr("test"),
 			expected: "gotestparrot.Ptr(\"test\").(*string)",
